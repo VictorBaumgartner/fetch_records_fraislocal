@@ -19,7 +19,9 @@
   },
   "homepage": "https://github.com/VictorBaumgartner/fetch_records_fraislocal#readme",
   "dependencies": {
+    "@types/express": "^5.0.3",
     "@types/node": "^24.0.3",
+    "express": "^5.1.0",
     "node-fetch": "^3.3.2",
     "typescript": "^5.8.3"
   }
