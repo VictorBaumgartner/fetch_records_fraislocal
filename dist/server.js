@@ -36,11 +36,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express")); // Keep the main express import simple
+const express_1 = __importDefault(require("express"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
+// Removed: import * as os from 'os'; // No longer needed for dynamic IP detection
 const app = (0, express_1.default)();
-const port = 3000;
+const port = 3000; // You can choose any available port, e.g., 80, 8080, etc.
 // Middleware to parse JSON request bodies
 app.use(express_1.default.json());
 // Path to your generated JSON data file
@@ -62,8 +63,7 @@ const loadRecordsData = () => {
 // Load data when the server starts
 loadRecordsData();
 // Endpoint to retrieve a record by url_sur_la_plateforme_partenaire
-// Explicitly using express.Request and express.Response here
-app.get('/lookup', (req, res) => {
+app.get('/lookup', ((req, res) => {
     const targetUrl = req.query.url;
     if (!targetUrl) {
         return res.status(400).json({ error: "Missing 'url' query parameter. Example: /lookup?url=<your_url>" });
@@ -79,15 +79,21 @@ app.get('/lookup', (req, res) => {
         console.log(`No record found for URL: ${decodedTargetUrl}`);
         res.status(404).json({ message: "No record found for the provided URL." });
     }
-});
-// Start the server
-app.listen(port, () => {
-    console.log(`Server API listening at http://localhost:${port}`);
-    console.log(`Lookup endpoint: http://localhost:${port}/lookup?url=YOUR_ENCODED_URL_HERE`);
+})); // Type assertion for workaround
+// Hardcoded local IP address as requested
+const localIpAddress = '192.168.0.51'; // <--- HARDCODED IP ADDRESS
+// Start the server, listening specifically on the provided local IP address
+app.listen(port, localIpAddress, () => {
+    console.log(`Server API listening on your local network IP: http://${localIpAddress}:${port}`);
+    console.log(`You can also access it locally via: http://localhost:${port}`);
+    console.log(`Lookup endpoint example: http://${localIpAddress}:${port}/lookup?url=YOUR_ENCODED_URL_HERE`);
     console.log("Make sure to URL-encode the 'url_sur_la_plateforme_partenaire' when sending it as a query parameter.");
 }).on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
-        console.error(`Port ${port} is already in use. Please choose a different port or stop the process using that port.`);
+        console.error(`Port ${port} is already in use on ${localIpAddress}. Please choose a different port or stop the process using that port.`);
+    }
+    else if (err.code === 'EADDRNOTAVAIL') {
+        console.error(`Error: Address ${localIpAddress} is not available. Please check your network configuration, or ensure this machine is assigned that IP.`);
     }
     else {
         console.error(`Server error: ${err.message}`);

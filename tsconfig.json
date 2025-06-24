@@ -4,13 +4,13 @@
     "module": "commonjs",
     "outDir": "./dist",
     "strict": true,
-    "esModuleInterop": true, // THIS MUST BE TRUE AND UNCOMMENTED
+    "esModuleInterop": true, 
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true
   },
   "include": [
     "fetchAndProcessRecords.ts", // Make sure this is present
-    "server.ts"                 // AND THIS IS PRESENT
+    "server.ts",                 
   ]
 }

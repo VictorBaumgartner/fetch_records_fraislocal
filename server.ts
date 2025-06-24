@@ -1,6 +1,7 @@
 import express from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
+// Removed: import * as os from 'os'; // No longer needed for dynamic IP detection
 
 const app = express();
 const port = 3000; // You can choose any available port, e.g., 80, 8080, etc.
@@ -54,32 +55,22 @@ app.get('/lookup', ((req: express.Request, res: express.Response) => {
     }
 }) as any); // Type assertion for workaround
 
-// Start the server, listening on all network interfaces ('0.0.0.0')
-app.listen(port, '0.0.0.0', () => {
-    // Determine the local IP address for display
-    const os = require('os');
-    const networkInterfaces = os.networkInterfaces();
-    let localIpAddress = 'localhost';
+// Hardcoded local IP address as requested
+const localIpAddress = '192.168.0.51'; // <--- HARDCODED IP ADDRESS
 
-    for (const iface in networkInterfaces) {
-        for (const alias of networkInterfaces[iface]!) {
-            if (alias.family === 'IPv4' && !alias.internal) {
-                localIpAddress = alias.address;
-                break;
-            }
-        }
-        if (localIpAddress !== 'localhost') break;
-    }
-
-    console.log(`Server API listening on all interfaces (0.0.0.0) at port ${port}`);
-    console.log(`You can access it locally via: http://localhost:${port}`);
-    console.log(`If configured for external access, others might use: http://${localIpAddress}:${port}`);
+// Start the server, listening specifically on the provided local IP address
+app.listen(port, localIpAddress, () => {
+    console.log(`Server API listening on your local network IP: http://${localIpAddress}:${port}`);
+    console.log(`You can also access it locally via: http://localhost:${port}`);
     console.log(`Lookup endpoint example: http://${localIpAddress}:${port}/lookup?url=YOUR_ENCODED_URL_HERE`);
     console.log("Make sure to URL-encode the 'url_sur_la_plateforme_partenaire' when sending it as a query parameter.");
 }).on('error', (err: NodeJS.ErrnoException) => {
     if (err.code === 'EADDRINUSE') {
-        console.error(`Port ${port} is already in use. Please choose a different port or stop the process using that port.`);
-    } else {
+        console.error(`Port ${port} is already in use on ${localIpAddress}. Please choose a different port or stop the process using that port.`);
+    } else if (err.code === 'EADDRNOTAVAIL') {
+        console.error(`Error: Address ${localIpAddress} is not available. Please check your network configuration, or ensure this machine is assigned that IP.`);
+    }
+    else {
         console.error(`Server error: ${err.message}`);
     }
     process.exit(1);
