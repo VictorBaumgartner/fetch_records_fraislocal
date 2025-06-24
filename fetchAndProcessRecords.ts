@@ -1,6 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-import fetch from 'node-fetch'; // For Node.js versions without built-in fetch or for broader compatibility
+import * as fs from 'fs'; // Changed from 'import fs from "fs";'
+import * as path from 'path'; // Changed from 'import path from "path";'
+import fetch from 'node-fetch'; // This import remains as is, and typically requires esModuleInterop or a specific type definition
 
 async function fetchAllRecordsAndSaveToFile(
     baseUrl: string = "https://www.fraisetlocal.fr/api/explore/v2.1/catalog/datasets/flux-toutes-plateformes/records",

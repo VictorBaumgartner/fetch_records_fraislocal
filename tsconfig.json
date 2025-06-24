@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es2020", // Modern target for Node.js
+    "module": "commonjs",
+    "outDir": "./dist", // Output compiled JS files into a 'dist' directory
+    "strict": true,     // Good practice for type safety
+    "esModuleInterop": true, // THIS IS THE CRITICAL FIX FOR YOUR ERROR
+    "skipLibCheck": true, // To avoid issues with library type definitions
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true // Required if you plan to import JSON files directly
+  },
+  "include": [
+    "fetchAndProcessRecords.ts" // Explicitly include your source file
+  ]
+}
