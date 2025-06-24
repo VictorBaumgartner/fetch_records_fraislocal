@@ -1,16 +1,16 @@
 import requests
 import json
+import os
 
-def fetch_all_records(base_url="https://www.fraisetlocal.fr/api/explore/v2.1/catalog/datasets/flux-toutes-plateformes/records"):
+def fetch_all_records_and_save_to_file(base_url="https://www.fraisetlocal.fr/api/explore/v2.1/catalog/datasets/flux-toutes-plateformes/records", output_filename="all_fraisetlocal_records.json"):
     """
     Fetches all records from the given Opendatasoft API URL by paginating with offset,
-    and then removes any duplicate records.
+    removes any duplicate records, and saves the unique records to a JSON file
+    in the current working directory.
 
     Args:
         base_url (str): The base URL of the API endpoint.
-
-    Returns:
-        list: A list containing all unique fetched records.
+        output_filename (str): The name of the JSON file to save the records to.
     """
     all_records = []
     offset = 0
@@ -74,21 +74,18 @@ def fetch_all_records(base_url="https://www.fraisetlocal.fr/api/explore/v2.1/cat
             unique_records.append(record)
 
     print(f"Total unique records after deduplication: {len(unique_records)}")
-    return unique_records
 
-# Example usage:
-if __name__ == "__main__":
-    records = fetch_all_records()
-    
-    if records:
-        print(f"\nFirst 5 unique records (if available):\n{json.dumps(records[:5], indent=2)}")
-        print(f"\nNumber of unique records: {len(records)}")
-    else:
-        print("No unique records were fetched.")
+    # --- Save records to file ---
+    try:
+        current_working_directory = os.getcwd()
+        file_path = os.path.join(current_working_directory, output_filename)
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(unique_records, f, indent=2, ensure_ascii=False)
+        print(f"All unique records saved to {file_path}")
+    except IOError as e:
+        print(f"Error saving records to file: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred while saving file: {e}")
 
-    # You can now perform your analysis on the 'records' list (which now contains only unique records)
-    # For example, checking field consistency, etc.
-    if records:
-        print("\nFields of the first unique record:")
-        for key in records[0].keys():
-            print(f"- {key}")
+# Call the function to execute the process
+fetch_all_records_and_save_to_file()
