@@ -3,13 +3,14 @@ import json
 
 def fetch_all_records(base_url="https://www.fraisetlocal.fr/api/explore/v2.1/catalog/datasets/flux-toutes-plateformes/records"):
     """
-    Fetches all records from the given Opendatasoft API URL by paginating with offset.
+    Fetches all records from the given Opendatasoft API URL by paginating with offset,
+    and then removes any duplicate records.
 
     Args:
         base_url (str): The base URL of the API endpoint.
 
     Returns:
-        list: A list containing all fetched records.
+        list: A list containing all unique fetched records.
     """
     all_records = []
     offset = 0
@@ -33,17 +34,17 @@ def fetch_all_records(base_url="https://www.fraisetlocal.fr/api/explore/v2.1/cat
 
             if not records:
                 # No more records found, break the loop
-                print("No more records found. Stopping process.")
+                print("No more records found. Stopping fetch process.")
                 break
 
             all_records.extend(records)
             total_records_fetched += len(records)
-            print(f"Fetched {len(records)} records. Total records so far: {total_records_fetched}")
+            print(f"Fetched {len(records)} records. Total records fetched so far: {total_records_fetched}")
 
             # Check if the number of records returned is less than the limit,
             # indicating it's the last page.
             if len(records) < limit:
-                print("Reached the last page of records. Stopping process.")
+                print("Reached the last page of records. Stopping fetch process.")
                 break
 
             offset += limit
@@ -58,22 +59,36 @@ def fetch_all_records(base_url="https://www.fraisetlocal.fr/api/explore/v2.1/cat
             print(f"An unexpected error occurred: {e}")
             break
 
-    print(f"Finished fetching all records. Total records collected: {len(all_records)}")
-    return all_records
+    print(f"\nFinished fetching all records. Total records collected before deduplication: {len(all_records)}")
+
+    # --- Deduplication Process ---
+    unique_records = []
+    seen_records = set()
+
+    for record in all_records:
+        # To make a dictionary hashable for set operations, convert it to a JSON string.
+        # Ensure consistent key order for consistent hashing by sorting items.
+        record_str = json.dumps(record, sort_keys=True)
+        if record_str not in seen_records:
+            seen_records.add(record_str)
+            unique_records.append(record)
+
+    print(f"Total unique records after deduplication: {len(unique_records)}")
+    return unique_records
 
 # Example usage:
 if __name__ == "__main__":
     records = fetch_all_records()
-    # You can now process the 'records' list
-    # For example, print the first few records or their count
+    
     if records:
-        print(f"\nFirst 5 records (if available):\n{json.dumps(records[:5], indent=2)}")
+        print(f"\nFirst 5 unique records (if available):\n{json.dumps(records[:5], indent=2)}")
+        print(f"\nNumber of unique records: {len(records)}")
     else:
-        print("No records were fetched.")
+        print("No unique records were fetched.")
 
-    # You could then perform your analysis on 'all_records' like checking field consistency
-    # Example of checking fields of the first record (if any)
+    # You can now perform your analysis on the 'records' list (which now contains only unique records)
+    # For example, checking field consistency, etc.
     if records:
-        print("\nFields of the first record:")
+        print("\nFields of the first unique record:")
         for key in records[0].keys():
             print(f"- {key}")
