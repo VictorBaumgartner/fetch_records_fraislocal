@@ -36,12 +36,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var fs = require("fs"); // Changed from 'import fs from "fs";'
-var path = require("path"); // Changed from 'import path from "path";'
-var node_fetch_1 = require("node-fetch"); // This import remains as is, and typically requires esModuleInterop or a specific type definition
+var fs = require("fs");
+var path = require("path");
+var node_fetch_1 = require("node-fetch"); // For Node.js versions without built-in fetch or for broader compatibility
 function fetchAllRecordsAndSaveToFile() {
     return __awaiter(this, arguments, void 0, function (baseUrl, outputFilename) {
-        var allRecords, offset, limit, totalRecordsFetched, url, response, data, records, error_1, uniqueRecords, seenRecords, _i, allRecords_1, record, recordStr, processedRecords, _a, uniqueRecords_1, record, filteredRecord, field, currentWorkingDirectory, filePath;
+        var allRecords, offset, limit, totalRecordsFetched, url, response, data, records, error_1, uniqueRecords, seenRecords, _i, allRecords_1, record, recordStr, excludedFields, processedRecords, _a, uniqueRecords_1, record, filteredRecord, field, currentWorkingDirectory, filePath;
         if (baseUrl === void 0) { baseUrl = "https://www.fraisetlocal.fr/api/explore/v2.1/catalog/datasets/flux-toutes-plateformes/records"; }
         if (outputFilename === void 0) { outputFilename = "all_fraisetlocal_records.json"; }
         return __generator(this, function (_b) {
@@ -101,27 +101,32 @@ function fetchAllRecordsAndSaveToFile() {
                         }
                     }
                     console.log("Total unique records after deduplication: ".concat(uniqueRecords.length));
+                    excludedFields = new Set([
+                        "reg_code",
+                        "adress_app", // Not in previous examples, but included as requested
+                        "url_du_logo" // Not in previous examples, but included as requested
+                    ]);
                     processedRecords = [];
                     for (_a = 0, uniqueRecords_1 = uniqueRecords; _a < uniqueRecords_1.length; _a++) {
                         record = uniqueRecords_1[_a];
                         filteredRecord = {};
                         // Iterate over all keys present in the record
                         for (field in record) {
-                            if (record.hasOwnProperty(field) && record[field] !== null) {
+                            if (record.hasOwnProperty(field) && record[field] !== null && !excludedFields.has(field)) {
                                 filteredRecord[field] = record[field];
                             }
                         }
-                        if (Object.keys(filteredRecord).length > 0) { // Only add if the filtered record is not empty after null removal
+                        if (Object.keys(filteredRecord).length > 0) { // Only add if the filtered record is not empty after filtering
                             processedRecords.push(filteredRecord);
                         }
                     }
-                    console.log("Total processed records after null value removal: ".concat(processedRecords.length));
+                    console.log("Total processed records after specific field exclusion and null value removal: ".concat(processedRecords.length));
                     // --- Save records to file ---
                     try {
                         currentWorkingDirectory = process.cwd();
                         filePath = path.join(currentWorkingDirectory, outputFilename);
                         fs.writeFileSync(filePath, JSON.stringify(processedRecords, null, 2), { encoding: 'utf8' });
-                        console.log("All unique and null-cleaned records saved to ".concat(filePath));
+                        console.log("All unique, specifically-filtered, and null-cleaned records saved to ".concat(filePath));
                     }
                     catch (error) {
                         console.error("Error saving records to file: ".concat(error.message));

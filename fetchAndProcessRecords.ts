@@ -1,6 +1,6 @@
-import * as fs from 'fs'; // Changed from 'import fs from "fs";'
-import * as path from 'path'; // Changed from 'import path from "path";'
-import fetch from 'node-fetch'; // This import remains as is, and typically requires esModuleInterop or a specific type definition
+import * as fs from 'fs';
+import * as path from 'path';
+import fetch from 'node-fetch'; // For Node.js versions without built-in fetch or for broader compatibility
 
 async function fetchAllRecordsAndSaveToFile(
     baseUrl: string = "https://www.fraisetlocal.fr/api/explore/v2.1/catalog/datasets/flux-toutes-plateformes/records",
@@ -67,22 +67,29 @@ async function fetchAllRecordsAndSaveToFile(
 
     console.log(`Total unique records after deduplication: ${uniqueRecords.length}`);
 
-    // --- Remove null values from all fields for each record ---
+    // --- Define fields to explicitly exclude ---
+    const excludedFields = new Set<string>([
+        "reg_code",
+        "adress_app", // Not in previous examples, but included as requested
+        "url_du_logo" // Not in previous examples, but included as requested
+    ]);
+
+    // --- Filter fields and remove null values for each record ---
     const processedRecords: any[] = [];
     for (const record of uniqueRecords) {
         const filteredRecord: { [key: string]: any } = {};
         // Iterate over all keys present in the record
         for (const field in record) {
-            if (record.hasOwnProperty(field) && record[field] !== null) {
+            if (record.hasOwnProperty(field) && record[field] !== null && !excludedFields.has(field)) {
                 filteredRecord[field] = record[field];
             }
         }
-        if (Object.keys(filteredRecord).length > 0) { // Only add if the filtered record is not empty after null removal
+        if (Object.keys(filteredRecord).length > 0) { // Only add if the filtered record is not empty after filtering
             processedRecords.push(filteredRecord);
         }
     }
     
-    console.log(`Total processed records after null value removal: ${processedRecords.length}`);
+    console.log(`Total processed records after specific field exclusion and null value removal: ${processedRecords.length}`);
 
     // --- Save records to file ---
     try {
@@ -90,7 +97,7 @@ async function fetchAllRecordsAndSaveToFile(
         const filePath = path.join(currentWorkingDirectory, outputFilename);
         
         fs.writeFileSync(filePath, JSON.stringify(processedRecords, null, 2), { encoding: 'utf8' });
-        console.log(`All unique and null-cleaned records saved to ${filePath}`);
+        console.log(`All unique, specifically-filtered, and null-cleaned records saved to ${filePath}`);
     } catch (error: any) {
         console.error(`Error saving records to file: ${error.message}`);
     }
